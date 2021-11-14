@@ -232,7 +232,7 @@ bool BMP::load(const char* filename)
 
 
 	DWORD infolLenght;
-	long long curpos = ftell(file);
+	long curpos = ftell(file);
 	fread(&infolLenght, sizeof(DWORD), 1, file);
 	fseek(file, curpos, SEEK_SET);
 	m_infoLenght = infolLenght;
@@ -347,7 +347,7 @@ void BMP::flipYAxis()
 
 DWORD BMP::getPixel(uint x, uint y)
 {
-	if (x < m_width && y < m_height)
+	if (x < abs(m_width) && y < abs(m_height))
 	{
 		if (yAxisFlipped)
 			y = m_height - y - 1;
@@ -361,17 +361,9 @@ DWORD BMP::getPixel(uint x, uint y)
 				m_data[(y * m_width + x) * cpp + 1 + m_strideBytes * y]);
 			return color;*/
 		}
-		else if (m_BitsPerPixel == 16)
+		else
 		{
-			memcpy(&out, &m_data[(y * m_width + x) * cpp + 0 + m_strideBytes * y], 2 * sizeof(BYTE));
-		}
-		else if (m_BitsPerPixel == 24)
-		{
-			memcpy(&out, &m_data[(y * m_width + x) * cpp + 0 + m_strideBytes * y], 3 * sizeof(BYTE));
-		}
-		else if (m_BitsPerPixel == 32)
-		{
-			memcpy(&out, &m_data[(y * m_width + x) * cpp + 0 + m_strideBytes * y], 4 * sizeof(BYTE));
+			memcpy(&out, &m_data[(y * m_width + x) * cpp + 0 + m_strideBytes * y], (m_BitsPerPixel / 8) * sizeof(BYTE));
 		}
 		return out;
 	}

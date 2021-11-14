@@ -21,7 +21,7 @@ struct ColorPalette
 
 	DWORD colorHex = 0;
 	BYTE r = 0, g = 0, b = 0;
-
+	
 	static const ColorPalette RED;
 	static const ColorPalette GREEN;
 	static const ColorPalette BLUE;
@@ -36,10 +36,32 @@ struct ColorPalette
 
 struct rgb555 : public ColorPalette
 {
+	rgb555(DWORD HEX, BYTE bytesPerPixel)
+	{
+		if (bytesPerPixel == 16)
+		{
+			r = (HEX >> 10) & 0b00011111;
+			g = (HEX >> 5) & 0b00011111;
+			b = HEX & 0b00011111;
+			this->colorHex = HEX;
+		}
+		else if (bytesPerPixel == 24 || bytesPerPixel == 32)
+		{
+			r = (HEX >> 16) & 0xFF;
+			g = (HEX >> 8) & 0xFF;
+			b = HEX & 0xFF;
+			this->colorHex = (this->r << 10) | (this->g << 5) | this->b;
+		}
+	}
 	rgb555(BYTE c1, BYTE c2)
 	{
-		this->r = (c1 & 0b11111000) >> 3;
+		/*this->r = (c1 & 0b11111100) >> 3;
 		this->g = ((c1 & 0b00000111) << 3) | ((c2 & 0b11100000) >> 5);
+		this->b = (c2 & 0b00011111);
+		this->colorHex = c1 * 256 + c2;*/
+
+		this->r = (c1 & 0b01111100) >> 2;
+		this->g = ((c1 & 0b00000011) << 3) | ((c2 & 0b11100000) >> 5);
 		this->b = (c2 & 0b00011111);
 		this->colorHex = c1 * 256 + c2;
 	}
@@ -63,6 +85,23 @@ struct rgb555 : public ColorPalette
 
 struct rgb565 : public ColorPalette
 {
+	rgb565(DWORD HEX, BYTE bytesPerPixel)
+	{
+		if (bytesPerPixel == 16)
+		{
+			r = (HEX >> 11) & 0b00011111;
+			g = (HEX >> 5) & 0b00111111;
+			b = HEX & 0b00011111;
+			this->colorHex = HEX;
+		}
+		else if (bytesPerPixel == 24 || bytesPerPixel == 32)
+		{
+			r = (HEX >> 16) & 0xFF;
+			g = (HEX >> 8) & 0xFF;
+			b = HEX & 0xFF;
+			this->colorHex = ((r & 0b11110000) << 7) | ((g & 0b11111100) << 3) | (b >> 3);
+		}
+	}
 	rgb565(BYTE c1, BYTE c2)
 	{
 		this->r = (c1 & 0b11111000) >> 3;
@@ -78,24 +117,6 @@ struct rgb565 : public ColorPalette
 		//this->colorHex = ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3);
 		this->colorHex = ((r & 0b11110000) << 7) | ((g & 0b11111100) << 3) | (b >> 3);
 	}
-	/*rgb565(const rgb565& color)
-	{
-		this->r = color.r;
-		this->g = color.g;
-		this->b = color.b;
-		this->colorHex = color.colorHex;
-	}
-
-	rgb565& operator=(const rgb565& color)
-	{
-		this->r = color.r;
-		this->g = color.g;
-		this->b = color.b;
-		this->colorHex = color.colorHex;
-		return *this;
-	}*/
-
-
 
 	/*friend std::ostream& operator<<(std::ostream& os, const rgb565& color)
 	{
@@ -106,6 +127,23 @@ struct rgb565 : public ColorPalette
 
 struct rgb : public ColorPalette
 {
+	rgb(DWORD HEX, BYTE bytesPerPixel)
+	{
+		if (bytesPerPixel == 16)
+		{
+			r = ((HEX >> 11) & 0b00011111) << 3;
+			g = ((HEX >> 5) & 0b00011111) << 3;
+			b = (HEX & 0b00011111) << 3;
+			this->colorHex = (r << 16) | (g << 8) | b;
+		}
+		else if (bytesPerPixel == 24 || bytesPerPixel == 32)
+		{
+			r = (HEX >> 16) & 0xFF;
+			g = (HEX >> 8) & 0xFF;
+			b = HEX & 0xFF;
+			this->colorHex = (r << 16) | (g << 8) | b;
+		}
+	}
 	rgb(BYTE r = 0, BYTE g = 0, BYTE b = 0)
 	{
 		this->r = r;
@@ -113,8 +151,6 @@ struct rgb : public ColorPalette
 		this->b = b;
 		this->colorHex = (r << 16) | (g << 8) | b;
 	}
-
-
 
 	friend std::ostream& operator<<(std::ostream& os, const rgb& color)
 	{
@@ -125,6 +161,33 @@ struct rgb : public ColorPalette
 
 struct rgba : public ColorPalette
 {
+	rgba(DWORD HEX, BYTE bytesPerPixel)
+	{
+		if (bytesPerPixel == 16)
+		{
+			a = 0;
+			r = ((HEX >> 11) & 0b00011111) << 3;
+			g = ((HEX >> 5) & 0b00011111) << 3;
+			b = (HEX & 0b00011111) << 3;
+			this->colorHex = (r << 16) | (g << 8) | b;
+		}
+		else if (bytesPerPixel == 24)
+		{
+			a = 0;
+			r = HEX >> 16;
+			g = (HEX >> 8) & 0xFF;
+			b = HEX & 0xFF;
+			this->colorHex = (r << 16) | (g << 8) | b;
+		}
+		else if (bytesPerPixel == 32)
+		{
+			a = (HEX >> 24) & 0xFF;
+			r = (HEX >> 16) & 0xFF;
+			g = (HEX >> 8) & 0xFF;
+			b = HEX & 0xFF;
+			this->colorHex = (r << 16) | (g << 8) | b;
+		}
+	}
 	rgba(BYTE r = 0, BYTE g = 0, BYTE b = 0, BYTE a = 0)
 		: a(a)
 	{
@@ -193,8 +256,10 @@ public:
 
 	void open();
 
-	uint width() { return m_width; }
-	uint height() { return m_height; }
+	uint width() const { return m_width; }
+	uint height() const { return m_height; }
+	BYTE bitsPerPixel() const { return m_BitsPerPixel; }
+	const char* filename() const { return m_filename; }
 
 	virtual void infolog() const = 0;
 

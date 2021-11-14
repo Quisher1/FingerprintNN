@@ -77,6 +77,7 @@ Matrix<T>& Matrix<T>::add(const Matrix<T>& other)
 {
 	if (m_width != other.m_width || m_height != other.m_height)
 		throw std::runtime_error("matrix sizes don\'t match");
+
 	for (int i = 0; i < m_size; ++i)
 		m_elements[i] += other.m_elements[i];
 	return *this;
@@ -114,7 +115,6 @@ Matrix<T> Matrix<T>::multiply(const Matrix<T>& mat)
 			res.m_elements[i * res.m_width + j] = sum;
 		}
 	}
-
 	return res;
 }
 /*template<typename T>
@@ -133,18 +133,27 @@ Vector<T> Matrix<T>::multiply(const Vector<T>& vec)
 	if (m_width != vec.m_size)
 		throw std::runtime_error("matrix sizes don\'t match with vector");
 
-	Vector<T> out(vec.m_size);
+	Vector<T> out(m_height);
 	double sum = 0;
-
-	for (int i = 0; i < vec.m_size; ++i) {
+	uint i, j, k;
+	for (i = 0; i < m_height; ++i)
+	{
 		sum = 0;
-		for (int j = 0; j < m_height; ++j)
+		for (k = 0; k < vec.m_size; ++k)
 		{
-			sum += m_elements[i * m_width + j] * vec.m_elements[j];
+			sum += m_elements[i * m_width + k] * vec.m_elements[k];
 		}
 		out.m_elements[i] = sum;
 	}
 	return out;
+	/*for (i = 0; i < vec.m_size; ++i) {
+		sum = 0;
+		for (j = 0; j < m_height; ++j)
+		{
+			sum += m_elements[i * m_width + j] * vec.m_elements[j];
+		}
+		out.m_elements[i] = sum;
+	}*/
 }
 
 template<typename T>

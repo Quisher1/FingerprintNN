@@ -82,6 +82,8 @@ public:
 	template<typename T>
 	friend std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat);
 
+	template<typename T>
+	friend Matrix<T> elementwiseMultiplication(const Matrix<T>& a, const Matrix<T>& b);
 
 	/*template<typename>
 	friend class Vector;*/
@@ -151,6 +153,25 @@ template<typename T>
 Matrix<T> operator/(const double value, Matrix<T> mat)
 {
 	return mat.divide(value);
+}
+
+
+template<typename T>
+Matrix<T> elementwiseMultiplication(const Matrix<T>& a, const Matrix<T>& b)
+{
+	if (a.m_width != b.m_width && a.m_height != b.m_height)
+		throw std::runtime_error("matrix sizes don't match");
+
+	Matrix<T> out(a.width(), a.height());
+
+	for (int i = 0; i < out.m_height; ++i)
+	{
+		for (int j = 0; j < out.m_width; ++j)
+		{
+			out(j, i) = a(j, i) * b(j, i);
+		}
+	}
+	return out;
 }
 
 

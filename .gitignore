@@ -348,3 +348,6 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/FingerprintNN/NeuralNetwork/newCastle.bmp
+/FingerprintNN/NeuralNetwork/newImage.bmp
+/FingerprintNN/NeuralNetwork/vegetables.bmp

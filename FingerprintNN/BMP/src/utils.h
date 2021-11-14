@@ -67,4 +67,5 @@ void applyFilter(BMP& bmp, const float* kernel, float scale = 1, int stride = 1)
 void gaussianBlur(BMP& bmp, int width, int height, float sigma = 0.84089642)
 {
 
+
 }

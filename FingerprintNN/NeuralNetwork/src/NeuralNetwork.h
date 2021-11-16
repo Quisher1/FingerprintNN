@@ -62,7 +62,6 @@ private:
 	matf sigmoid(const matf& mat);
 	matf derivativedSigmoid(const matf& mat);
 
-public:
 	matf applyFunction(const matf& mat, float(*func)(float));
 
 	//matf relu(const matf& x);

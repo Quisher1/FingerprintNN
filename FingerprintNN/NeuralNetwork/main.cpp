@@ -6,14 +6,26 @@
 int main()
 {
 
-	BMP bmp("bridge");
+	/*BMP image("forest");
+
+	grayscale(image);
+
+	image.saveAs("newImage1");
+
+	logTransformation(image);
 
 
-	grayscale(bmp);
+	image.saveAs("newImage2");*/
 
-	bmp.saveAs("newImage");
 
-	
+	BMP image("vegetables");
+
+
+
+
+	gaussianBlur(image, 3);
+
+	image.saveAs("newImage");
 
 
 

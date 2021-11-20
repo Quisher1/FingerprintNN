@@ -30,6 +30,7 @@ struct ColorPalette
 	static const ColorPalette CYAN;
 	static const ColorPalette WHITE;
 	static const ColorPalette BLACK;
+	static const ColorPalette GRAY;
 };
 
 // TODO: constructor(Hex hex);

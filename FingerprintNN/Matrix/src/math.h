@@ -16,6 +16,16 @@ static double dot(const Vector<T>& a, const Vector<T>& b)
 	return out;
 }
 
+template<typename T>
+static Matrix<T> applyFunction(const Matrix<T>& mat, float(*func)(float))
+{
+	matf out(mat.width(), mat.height());
+	for (int y = 0; y < mat.height(); ++y)
+		for (int x = 0; x < mat.width(); ++x)
+			out(x, y) = func(mat(x, y));
+	return out;
+}
+
 
 //template<typename T>
 //static double dot(const Vector<T>& a, const Vector<T>& b)

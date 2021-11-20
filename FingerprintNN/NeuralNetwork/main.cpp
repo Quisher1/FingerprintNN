@@ -2,35 +2,26 @@
 #include "src/NeuralNetwork.h"
 #include "src/BMP.h"
 #include "src/utils.h"
+#include "src/math.h"
+
+#include <fstream>
+
+
+
 
 int main()
 {
 
-	/*BMP image("forest");
-
+	BMP image("anime4k");
 	grayscale(image);
-
-	image.saveAs("newImage1");
-
-	logTransformation(image);
-
-
-	image.saveAs("newImage2");*/
+	noise(image, 0, 30, 10);
+	image.saveAs("coinsNoise");
+	medianFilter(image, 3);
 
 
-	BMP image("vegetables");
-
-
-
-
-	gaussianBlur(image, 3);
-
-	image.saveAs("newImage");
-
-
+	image.saveAs("coinsMedian");
 
 	/*NeuralNetwork net({2, 2, 1});
-
 	net.randomizeWeightsBiases();
 
 	matf*inp = new matf[4];
@@ -58,8 +49,8 @@ int main()
 	out[3](0, 0) = 0;
 
 
-	net.infoLog();
 
+	net.infoLog();
 
 
 	int k = 0;
@@ -71,7 +62,7 @@ int main()
 	std::cout << net.getOutput() << std::endl;
 
 
-	for (int i = 0; i < 500000; ++i)
+	for (int i = 0; i < 50000; ++i)
 	{
 		net.setInput(inp[k]);
 		net.setExpectedOutput(out[k]);
@@ -89,6 +80,8 @@ int main()
 			std::cout << std::endl;
 		}
 	}
+
+	net.save("test");
 
 
 	net.infoLog();*/

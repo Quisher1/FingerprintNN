@@ -9,7 +9,7 @@ const ColorPalette ColorPalette::PINK(255, 0, 255);
 const ColorPalette ColorPalette::CYAN(0, 255, 255);
 const ColorPalette ColorPalette::WHITE(255, 255, 255);
 const ColorPalette ColorPalette::BLACK(0, 0, 0);
-
+const ColorPalette ColorPalette::GRAY(128, 128, 128);
 
 
 //const rgb rgb::RED(255, 0, 0);

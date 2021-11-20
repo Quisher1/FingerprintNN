@@ -39,14 +39,16 @@ public:
 	void infoLog();
 
 
+
+	void save(const char* filename);
+	void load(const char* filename);
+
+
 	const matf getOutput();
 
+private:
 	// Mean Squared Error
 	float MSE(const matf& a, const matf& b);
-private:
-
-
-
 
 
 	inline const float sigmoid(float x) const { return (1.0f / (1 + pow(2.71828f, -x))); }
@@ -62,14 +64,12 @@ private:
 	matf sigmoid(const matf& mat);
 	matf derivativedSigmoid(const matf& mat);
 
-	matf applyFunction(const matf& mat, float(*func)(float));
-
 	//matf relu(const matf& x);
 	//matf athan(const matf& x);
 
 private:
 
-	uint m_layersCount;
+	uint m_layersCount = 0;
 	uint* m_layers = nullptr;
 
 

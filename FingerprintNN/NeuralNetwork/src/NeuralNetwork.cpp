@@ -2,6 +2,9 @@
 #include <cstring>
 #include <random>
 
+#include <fstream>
+#include <string>
+
 NeuralNetwork::NeuralNetwork(std::initializer_list<uint> layers)
 {
 	m_layersCount = layers.size();
@@ -73,7 +76,7 @@ void NeuralNetwork::backpropagation()
 	for (int i = m_layersCount - 2; i > 0; --i)
 	{
 		m_deltaNeurons[i] = elementwiseMultiplication(m_weights[i + 1].transpose() * m_deltaNeurons[i + 1], derivativedSigmoid(m_neurons[i]));
-		m_weights[i] -= learningRate * m_deltaNeurons[i] * sigmoid(m_neurons[i - 1]).transpose();
+		m_weights[i] -= learningRate * m_deltaNeurons[i] * (i == 1 ? m_neurons[i - 1].transpose() : sigmoid(m_neurons[i - 1]).transpose());
 		m_biases[i] -= learningRate * m_deltaNeurons[i];
 	}
 }
@@ -154,11 +157,78 @@ matf NeuralNetwork::derivativedSigmoid(const matf& mat)
 }
 
 
-matf NeuralNetwork::applyFunction(const matf& mat, float(*func)(float))
+void NeuralNetwork::save(const char* filename)
 {
-	matf out(mat.width(), mat.height());
-	for (int y = 0; y < mat.height(); ++y)
-		for (int x = 0; x < mat.width(); ++x)
-			out(x, y) = func(mat(x, y));
-	return out;
+	if(m_layersCount == 0)
+		throw std::runtime_error("nothing to save");
+
+	std::string str(filename); str += ".txt";
+
+	std::fstream file;
+	file.open(str.c_str(), std::fstream::out | std::fstream::trunc);
+
+	if (!file.is_open())
+		throw std::runtime_error("file saving problem");
+
+	file << m_layersCount << std::endl;
+	for (int i = 0; i < m_layersCount; ++i)
+	{
+		file << m_layers[i] << " ";
+	}
+	file << std::endl;
+
+	// tODO: save properties of NN
+
+	for (int i = 1; i < m_layersCount; ++i)
+	{
+		file << m_weights[i] << std::endl;
+	}
+
+	for (int i = 1; i < m_layersCount; ++i)
+	{
+		file << m_biases[i] << std::endl;
+	}
+
+
+	file.close();
+}
+void NeuralNetwork::load(const char* filename)
+{
+	std::string str(filename); str += ".txt";
+
+	std::fstream file;
+	file.open(str.c_str());
+
+	if (!file.is_open())
+		throw std::runtime_error("file loading problem");
+
+	file >> m_layersCount;
+	for (int i = 0; i < m_layersCount; ++i)
+	{
+		file >> m_layers[i];
+	}
+	m_weights[0] = matf(0, 0);
+	for (int i = 0; i < m_layersCount - 1; ++i)
+	{
+		m_weights[i + 1] = matf(m_layers[i], m_layers[i + 1]);
+		for (int j = 0; j < m_layers[i + 1]; ++j)
+		{
+			for (int k = 0; k < m_layers[i]; ++k)
+			{
+				file >> m_weights[i+1](k, j);
+			}
+		}
+	}
+
+	m_biases[0] = matf(0, 0);
+	for (int i = 0; i < m_layersCount - 1; ++i)
+	{
+		m_biases[i + 1] = matf(1, m_layers[i + 1]);
+		for (int k = 0; k < m_layers[i + 1]; ++k)
+		{
+			file >> m_biases[i + 1](0, k);
+		}
+	}
+
+	file.close();
 }

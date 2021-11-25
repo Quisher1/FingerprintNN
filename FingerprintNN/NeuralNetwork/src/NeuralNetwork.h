@@ -73,7 +73,7 @@ private:
 	uint* m_layers = nullptr;
 
 
-	float learningRate = 1;
+	float learningRate = 0.1;
 
 	//TODO: may be change m_neurons from matf to vecf
 
@@ -82,7 +82,7 @@ private:
 	matf* m_neurons = nullptr;
 	matf* m_weights = nullptr;
 	matf* m_biases = nullptr;
-	
+
 	matf* m_input = nullptr;
 	matf* m_output = nullptr;
 

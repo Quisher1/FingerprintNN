@@ -16,10 +16,11 @@ public:
 	Matrix<T>(uint width, uint height, T defaultValue = 0);
 
 	Matrix<T>(const Matrix<T>& vmatec);
+	Matrix<T> operator=(const Matrix<T>& mat);
 
 	~Matrix<T>();
 
-	T& operator()(uint x, uint y) const;
+	inline T& operator()(uint x, uint y) const;
 	//Vector<T>& (uint rowIndex) const;
 
 	inline uint width() const { return m_width; }
@@ -63,7 +64,6 @@ public:
 	/*template<typename T>
 	friend Vector<T> operator*(Matrix<T> mat, const Vector<T>& vec);*/
 
-	Matrix<T> operator=(const Matrix<T>& mat);
 
 	Matrix<T>& operator*=(const float value);
 	Matrix<T>& operator/=(const float value);

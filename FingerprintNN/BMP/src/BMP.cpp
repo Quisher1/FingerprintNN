@@ -1,460 +1,295 @@
 #include "BMP.h"
 
+const rgb rgb::RED(255, 0, 0);
+const rgb rgb::GREEN(0, 255, 0);
+const rgb rgb::BLUE(0, 0, 255);
+const rgb rgb::YELLOW(255, 255, 0);
+const rgb rgb::PINK(255, 0, 255);
+const rgb rgb::CYAN(0, 255, 255);
+const rgb rgb::WHITE(255, 255, 255);
+const rgb rgb::BLACK(0, 0, 0);
+const rgb rgb::GRAY(128, 128, 128);
 
-const ColorPalette ColorPalette::RED(255, 0, 0);
-const ColorPalette ColorPalette::GREEN(0, 255, 0);
-const ColorPalette ColorPalette::BLUE(0, 0, 255);
-const ColorPalette ColorPalette::YELLOW(255, 255, 0);
-const ColorPalette ColorPalette::PINK(255, 0, 255);
-const ColorPalette ColorPalette::CYAN(0, 255, 255);
-const ColorPalette ColorPalette::WHITE(255, 255, 255);
-const ColorPalette ColorPalette::BLACK(0, 0, 0);
-const ColorPalette ColorPalette::GRAY(128, 128, 128);
-
-
-//const rgb rgb::RED(255, 0, 0);
-//const rgb rgb::GREEN(0, 255, 0);
-//const rgb rgb::BLUE(0, 0, 255);
-//const rgb rgb::WHITE(255, 255, 255);
-//const rgb rgb::BLACK(0, 0, 0);
-//
-//const rgb555 rgb555::RED(255, 0, 0);
-//const rgb555 rgb555::GREEN(0, 255, 0);
-//const rgb555 rgb555::BLUE(0, 0, 255);
-//const rgb555 rgb555::WHITE(255, 255, 255);
-//const rgb555 rgb555::BLACK(0, 0, 0);
-//
-//const rgb565 rgb565::RED(255, 0, 0);
-//const rgb565 rgb565::GREEN(0, 255, 0);
-//const rgb565 rgb565::BLUE(0, 0, 255);
-//const rgb565 rgb565::WHITE(255, 255, 255);
-//const rgb565 rgb565::BLACK(0, 0, 0);
-//
-//const rgba rgba::RED(255, 0, 0, 0);
-//const rgba rgba::GREEN(0, 255, 0, 0);
-//const rgba rgba::BLUE(0, 0, 255, 0);
-//const rgba rgba::WHITE(255, 255, 255, 0);
-//const rgba rgba::BLACK(0, 0, 0, 0);
-
-
-void BitMapImage::open()
-{
-	std::string str(m_filename);
-	str += ".bmp";
-	str = "start " + str;
-	system(str.c_str());
-}
 
 
 BMP::BMP()
 {
-
-}
-BMP::BMP(const char* filename)
-{
-	m_filename = filename;
-
-	load(m_filename);
-}
-BMP::BMP(const BMP& bmp)
-{
-	m_filename = bmp.m_filename;
-	m_height = bmp.m_height;
-	m_width = bmp.m_width;
-	m_BitsPerPixel = bmp.m_BitsPerPixel;
-	m_bitsPerMeterX = bmp.m_bitsPerMeterX;
-	m_bitsPerMeterY = bmp.m_bitsPerMeterY;
-	m_colorTableSize = bmp.m_colorTableSize;
-	m_colorTableNumberOfElements = bmp.m_colorTableNumberOfElements;
-	m_storageMethod = bmp.m_colorTableNumberOfElements;
-	m_dataPosition = bmp.m_dataPosition;
-	m_fileSize = bmp.m_fileSize;
-	m_pixelDataSize = bmp.m_pixelDataSize;
-	m_rowSize = bmp.m_rowSize;
-	m_strideBytes = bmp.m_strideBytes;
-	m_headerLenght = bmp.m_headerLenght;
-	m_infoLenght = bmp.m_infoLenght;
-	m_dataLenght = bmp.m_dataLenght;
-	yAxisFlipped = bmp.yAxisFlipped;
-
-	m_header = new BYTE[m_headerLenght];
-	m_info = new BYTE[m_infoLenght];
-	m_data = new BYTE[m_dataLenght];
-
-	memcpy(m_header, bmp.m_header, m_headerLenght);
-	memcpy(m_info, bmp.m_info, m_infoLenght);
-	memcpy(m_data, bmp.m_data, m_dataLenght);
+	
 }
 
-
-// BMP version - 3 
-BMP::BMP(uint width, uint height, ColorPalette color, const char* filename, BMPFormat format)
+BMP::BMP(std::string filename)
+	: m_filename(filename)
 {
-	m_filename = filename;
-
-	m_width = width;
-	m_height = height;
-	m_BitsPerPixel = format;
-
-	m_bitsPerMeterX = 0; //
-	m_bitsPerMeterY = 0; //
-
-	m_rowSize = (((m_BitsPerPixel * m_width) + 31) & ~31) >> 3;
-	m_strideBytes = m_rowSize - m_width * m_BitsPerPixel / 8;
-
-
-
-	m_headerLenght = 14;
-	m_header = new BYTE[m_headerLenght];
-	m_infoLenght = 40;
-	m_info = new BYTE[m_infoLenght];
-	m_dataLenght = m_rowSize * height;
-	m_data = new BYTE[m_dataLenght];
-
-
-	memset(m_header, 0, m_headerLenght);
-	memset(m_info, 0, m_infoLenght);
-	memset(m_data, 0, m_dataLenght);
-
-	m_fileSize = m_headerLenght + m_infoLenght + m_dataLenght;
-
-
-	m_colorTableSize = 0;
-	m_colorTableNumberOfElements = 0;
-	m_storageMethod = 0;
-	m_dataPosition = 54;
-	m_pixelDataSize = m_rowSize * m_height;
-
-	uint cpp = m_BitsPerPixel / 8;
-
-	DWORD fillColor = 0;
-	memcpy(&fillColor, &color.colorHex, cpp * sizeof(BYTE));
-	if (m_BitsPerPixel == 16)
-		if (is_rgb565)
-			fillColor = rgb565(color.r, color.g, color.b).colorHex;
-		else
-			fillColor = rgb555(color.r, color.g, color.b).colorHex;
-
-	for (int i = 0; i < m_height; ++i)
-		for (int j = 0; j < m_width; ++j)
-			memcpy(&m_data[(i * m_width + j) * cpp + 0 + m_strideBytes * i], &fillColor, cpp * sizeof(BYTE));
-
-
-	VariablesToArray();
+	fileToStructs(filename);
 }
 
-
-BMP::~BMP()
+BMP::BMP(const BMP& other)
 {
-	if (m_header != nullptr)
-	{
-		delete[] m_header;
-		delete[] m_info;
-		delete[] m_data;
-	}
+	m_filename = other.m_filename;
+	data_line_size = other.data_line_size;
+	padding_size = other.padding_size;
+
+	m_channels = other.m_channels;
+	m_matrix_channels = other.m_matrix_channels;
+
+
+	header = other.header;
+	info = other.info;
+
+	mat = new Matrix<BYTE>[m_matrix_channels];
+
+	for (int k = 0; k < m_matrix_channels; ++k)
+		mat[k] = other.mat[k];
 }
 
 
 BMP& BMP::operator=(const BMP& other)
 {
-	if (this == &other)
+	if(this == &other)
 		return *this;
 
 	m_filename = other.m_filename;
-	m_height = other.m_height;
-	m_width = other.m_width;
-	m_BitsPerPixel = other.m_BitsPerPixel;
-	m_bitsPerMeterX = other.m_bitsPerMeterX;
-	m_bitsPerMeterY = other.m_bitsPerMeterY;
-	m_colorTableSize = other.m_colorTableSize;
-	m_colorTableNumberOfElements = other.m_colorTableNumberOfElements;
-	m_storageMethod = other.m_colorTableNumberOfElements;
-	m_dataPosition = other.m_dataPosition;
-	m_fileSize = other.m_fileSize;
-	m_pixelDataSize = other.m_pixelDataSize;
-	m_rowSize = other.m_rowSize;
-	m_strideBytes = other.m_strideBytes;
-	m_headerLenght = other.m_headerLenght;
-	m_infoLenght = other.m_infoLenght;
-	m_dataLenght = other.m_dataLenght;
-	yAxisFlipped = other.yAxisFlipped;
+	data_line_size = other.data_line_size;
+	padding_size = other.padding_size;
 
-	if (m_header != nullptr)
-	{
-		delete[] m_header;
-		delete[] m_info;
-		delete[] m_data;
-	}
+	m_channels = other.m_channels;
+	m_matrix_channels = other.m_matrix_channels;
 
-	m_header = new BYTE[m_headerLenght];
-	m_info = new BYTE[m_infoLenght];
-	m_data = new BYTE[m_dataLenght];
 
-	memcpy(m_header, other.m_header, m_headerLenght);
-	memcpy(m_info, other.m_info, m_infoLenght);
-	memcpy(m_data, other.m_data, m_dataLenght);
+	header = other.header;
+	info = other.info;
 
-	return *this;
+	if (mat != nullptr)
+		delete[] mat;
+	mat = new Matrix<BYTE>[m_matrix_channels];
+
+	for (int k = 0; k < m_matrix_channels; ++k)
+		mat[k] = other.mat[k];
 }
 
 
 
-
-bool BMP::load(const char* filename)
+BMP::BMP(DWORD width, DWORD height, rgb fillcolor, std::string filename, BMPFormat format)
+	:	m_filename(filename)
 {
-	std::string name(filename);
-	name += ".bmp";
+	m_channels = int(format) / 8;
+	if (format == 16)
+		m_matrix_channels = 3;
+	else
+		m_matrix_channels = m_channels;
 
+	data_line_size = (((info.bits_per_pixel * width) + 31) & ~31) >> 3;
+	padding_size = data_line_size - width * m_channels;
+
+	header.bmp_type = 0x4D42;
+	header.file_size = 14 + 50 + data_line_size * height;
+	header.reserv_1 = 0;
+	header.reserv_2 = 0;
+	header.data_position = 0x36;
+
+	info.info_structure_size = 0x28;
+	info.m_width = width;
+	info.m_height = height;
+	info.planes = 1;
+	info.bits_per_pixel = format;
+	info.compression = 0;
+	info.size_image = data_line_size * height + 2/*file ending*/;
+	info.pixel_per_meter_X = 2834;
+	info.pixel_per_meter_Y = 2834;
+	info.color_table_size = 0;
+	info.color_important = 0;
+
+	BYTE arr[4] = { fillcolor.r, fillcolor.g, fillcolor.b, 0 };
+
+	mat = new Matrix<BYTE>[m_matrix_channels];
+	for (int i = 0; i < m_matrix_channels; ++i)
+		mat[i] = Matrix<BYTE>(info.m_width, info.m_height, arr[i]);
+}
+
+BMP::~BMP()
+{
+	if(mat != nullptr)
+		delete[] mat;
+}
+
+
+void BMP::load(std::string filename)
+{
+	fileToStructs(filename);
+}
+void BMP::saveAs(std::string newfilename)
+{
+	structsToFile(newfilename);
+}
+void BMP::save()
+{
+	structsToFile(m_filename);
+}
+
+
+rgb BMP::getPixel(uint x, uint y)
+{
+	return rgb(mat[0](x, y), mat[1](x, y), mat[2](x, y));
+}
+void BMP::setPixel(uint x, uint y, BYTE r, BYTE g, BYTE b)
+{
+	mat[0](x, y) = r;	mat[1](x, y) = g;	mat[2](x, y) = b;
+}
+
+
+Matrix<BYTE>* BMP::at(uint channel)
+{
+	if (channel < m_matrix_channels)
+		return &mat[channel];
+	return nullptr;
+}
+
+
+
+/////// private:
+
+void BMP::fileToStructs(std::string filename)
+{
+	std::string name = filename + ".bmp";
 	FILE* file = fopen(name.c_str(), "rb");
 	if (!file)
-		throw std::runtime_error("file doesn't exists");
+		throw std::runtime_error("can't open file");
 
-	if (m_header != nullptr && m_info != nullptr && m_data != nullptr)
+	m_filename = filename;
+
+	fread(&header.bmp_type, sizeof(WORD), 1, file);
+	fread(&header.file_size, sizeof(DWORD), 1, file);
+	fread(&header.reserv_1, sizeof(WORD), 1, file);
+	fread(&header.reserv_2, sizeof(WORD), 1, file);
+	fread(&header.data_position, sizeof(DWORD), 1, file);
+
+
+	fread(&info.info_structure_size, sizeof(DWORD), 1, file);
+	fread(&info.m_width, sizeof(DWORD), 1, file);
+	fread(&info.m_height, sizeof(DWORD), 1, file);
+	fread(&info.planes, sizeof(WORD), 1, file);
+	fread(&info.bits_per_pixel, sizeof(WORD), 1, file);
+	fread(&info.compression, sizeof(DWORD), 1, file);
+	fread(&info.size_image, sizeof(DWORD), 1, file);
+	fread(&info.pixel_per_meter_X, sizeof(LONG), 1, file);
+	fread(&info.pixel_per_meter_Y, sizeof(LONG), 1, file);
+	fread(&info.color_table_size, sizeof(DWORD), 1, file);
+	fread(&info.color_important, sizeof(DWORD), 1, file);
+
+
+	if (header.bmp_type == 0x4D42)
 	{
-		delete[] m_header;
-		delete[] m_info;
-		delete[] m_data;
-	}
-
-	fseek(file, 0L, SEEK_END);
-	long long end_pos = ftell(file);
-	fseek(file, 0L, SEEK_SET);
-
-
-	m_header = new BYTE[m_headerLenght];
-	fread(m_header, sizeof(BYTE), m_headerLenght, file);
-
-
-	if (m_header[0] != 'B' && m_header[1] != 'M') {
-		fclose(file);
-		throw std::runtime_error("this is not a bmp file format");
-	}
-
-
-	DWORD infolLenght;
-	long curpos = ftell(file);
-	fread(&infolLenght, sizeof(DWORD), 1, file);
-	fseek(file, curpos, SEEK_SET);
-	m_infoLenght = infolLenght;
-
-
-
-	// 32-bit info field - Version 3
-
-	// if(m_infoLenght >= 40)
-
-	m_info = new BYTE[m_infoLenght];
-	fread(m_info, sizeof(BYTE), m_infoLenght, file);
-
-
-	m_fileSize = *(DWORD*)(&m_header[0x02]);
-	m_dataPosition = *(DWORD*)(&m_header[0x0A]);
-
-
-	m_width = abs(*(LONG*)(&m_info[0x04]));
-	m_height = abs(*(LONG*)(&m_info[0x08]));
-	m_BitsPerPixel = *(WORD*)(&m_info[0x0E]);
-	m_storageMethod = *(WORD*)(&m_info[0x10]);
-	m_pixelDataSize = *(DWORD*)(&m_info[0x14]);
-	m_bitsPerMeterX = *(LONG*)(&m_info[0x18]);
-	m_bitsPerMeterY = *(LONG*)(&m_info[0x1C]);
-	m_colorTableSize = *(DWORD*)(&m_info[0x20]);
-	m_colorTableNumberOfElements = *(DWORD*)(&m_info[0x24]);
-
-
-	if (*(WORD*)(&m_info[0x0C]) != 1)
-		std::cout << "file is using for cursors!?" << std::endl;
-	if (m_BitsPerPixel != 24 && m_BitsPerPixel != 32)
-		std::cout << "Warning: " << ("this class doesn't support BMP where bits per pixel equals: " + std::to_string(m_BitsPerPixel)) << std::endl;
-	//if (m_BitsPerPixel == 24)
-		//m_rowPadding = abs(((m_width * 3 + 3) & (~3)) - m_width * 3);
-		//m_rowPadding = (3 * m_width + 3) & (-4);
-
-
-
-	// 32-bit info field - Version 4
-	// doesn't supported yet
-	// TODO 32-bit info field Ver4
-
-	// if(m_infoLenght >= 40)
-
-	// 32-bit info field - Version 5
-	// doesn't supported yet
-	// TODO 32-bit info field Ver5
-
-
-	fseek(file, m_dataPosition, SEEK_SET);
-
-	//uint rowSize_floor = floor(((m_BitsPerPixel * m_width + 31) / 32.f) * 4);
-	//uint rowSize_ceil = ceil(((m_BitsPerPixel * m_width) / 32.f) * 4);
-
-	m_rowSize = (((m_BitsPerPixel * m_width) + 31) & ~31) >> 3;
-	m_strideBytes = m_rowSize - m_width * m_BitsPerPixel / 8;
-	//uint rowSize = 4 * int(((m_BitsPerPixel * m_width) + 31) / 32);
-
-	m_dataLenght = m_rowSize * m_height;
-	m_data = new BYTE[m_dataLenght];
-	fread(m_data, sizeof(BYTE), m_dataLenght, file);
-
-	fclose(file);
-	return true;
-}
-
-// rewrite origin file to the one stored in this class
-bool BMP::save()
-{
-	std::string name(m_filename);
-	name += ".bmp";
-
-	remove(name.c_str());
-
-	FILE* file = fopen(name.c_str(), "wb");
-
-	if (!file)
-		throw std::runtime_error("problem to open file " + name);
-
-	fwrite(m_header, sizeof(BYTE), m_headerLenght, file);
-	fwrite(m_info, sizeof(BYTE), m_infoLenght, file);
-	fwrite(m_data, sizeof(BYTE), m_dataLenght, file);
-
-	fclose(file);
-	return true;
-}
-
-// create new file and save data to it
-bool BMP::saveAs(const char* newfilename)
-{
-	std::string name(newfilename);
-	name += ".bmp";
-	FILE* file = fopen(name.c_str(), "wb");
-
-	if (!file)
-		throw std::runtime_error("problem to create new file or rewrite file " + name);
-
-	fwrite(m_header, sizeof(BYTE), m_headerLenght, file);
-	fwrite(m_info, sizeof(BYTE), m_infoLenght, file);
-	fwrite(m_data, sizeof(BYTE), m_dataLenght, file);
-
-	fclose(file);
-	return true;
-}
-
-
-void BMP::flipYAxis()
-{
-	yAxisFlipped = !yAxisFlipped;
-}
-
-DWORD BMP::getPixel(uint x, uint y)
-{
-	if (x < abs(m_width) && y < abs(m_height))
-	{
-		if (yAxisFlipped)
-			y = m_height - y - 1;
-
-		uint cpp = m_BitsPerPixel / 8;
-
-		DWORD out = 0;
-		if (m_BitsPerPixel == 8)
+		if (info.info_structure_size == 0x28)
 		{
-			/*static rgb565 color(m_data[(y * m_width + x) * cpp + 0 + m_strideBytes * y],
-				m_data[(y * m_width + x) * cpp + 1 + m_strideBytes * y]);
-			return color;*/
+			// BMP ver. 3
 		}
 		else
 		{
-			memcpy(&out, &m_data[(y * m_width + x) * cpp + 0 + m_strideBytes * y], (m_BitsPerPixel / 8) * sizeof(BYTE));
+			// BMP not 3 ver.
 		}
-		return out;
+
 	}
-	throw std::runtime_error("inndex out of range");
-}
+	m_channels = info.bits_per_pixel / 8;
 
-void BMP::setPixel(uint x, uint y, BYTE r, BYTE g, BYTE b, BYTE a)
-{
-	if (x < m_width && y < m_height)
+
+	if (info.bits_per_pixel == 16)
+		m_matrix_channels = 3;
+	else
+		m_matrix_channels = m_channels;
+
+
+	data_line_size = (((info.bits_per_pixel * width) + 31) & ~31) >> 3;
+	
+	padding_size = data_line_size - width * m_channels;
+
+
+
+	mat = new Matrix<BYTE>[m_matrix_channels];
+	for (int i = 0; i < m_matrix_channels; ++i)
+		mat[i] = Matrix<BYTE>(info.m_width, info.m_height);
+
+
+	fseek(file, header.data_position, SEEK_SET);
+
+	DWORD color = 0;
+	BYTE zero = 0;
+	for (int i = 0; i < info.m_height; ++i)
 	{
-		if (yAxisFlipped)
-			y = m_height - y - 1;
+		for (int j = 0; j < (data_line_size - padding_size) / m_channels; ++j)
+		{
+			fread(&color, sizeof(BYTE), m_channels, file);
 
-		uint cpp = m_BitsPerPixel / 8;
-		DWORD color = 0;
-		if (m_BitsPerPixel == 16)
-			if (is_rgb565)
-				color = rgb565(r, g, b).colorHex;
+			if (info.bits_per_pixel == 16) {
+				mat[0](j, i) = ((color >> 10) & 0x1F) << 3;
+				mat[1](j, i) = ((color >> 5) & 0x1F) << 3;
+				mat[2](j, i) = ((color >> 0) & 0x1F) << 3;
+			}
 			else
-				color = rgb555(r, g, b).colorHex;
-		else
-			color = rgba(r, g, b, a).colorHex;
-
-		memcpy(&m_data[(y * m_width + x) * cpp + 0 + m_strideBytes * y], &color, cpp * sizeof(BYTE));
-		return;
+				for (int k = 0; k < m_channels; ++k)
+					mat[k](j, i) = (color >> ((m_channels - 1) * 8 - k * 8)) & 0xFF;
+			
+		}
+		for (int k = 0; k < padding_size; ++k)
+			fread(&zero, sizeof(BYTE), 1, file);
 	}
-	throw std::runtime_error("inndex out of range");
+	fclose(file);
 }
-
-
-
-void BMP::infolog() const
+void BMP::structsToFile(std::string filename)
 {
-	std::cout << "File Name: \"" << m_filename << ".bmp\"" << std::endl;
+	std::string name = filename + ".bmp";
+	FILE* file = fopen(name.c_str(), "wb");
+	if (!file)
+		throw std::runtime_error("can't open file");
 
-	std::cout << "Image Width: " << m_width << "\tHeight: " << m_height << std::endl;
+	fwrite(&header.bmp_type, sizeof(WORD), 1, file);
+	fwrite(&header.file_size, sizeof(DWORD), 1, file);
+	fwrite(&header.reserv_1, sizeof(WORD), 1, file);
+	fwrite(&header.reserv_2, sizeof(WORD), 1, file);
+	fwrite(&header.data_position, sizeof(DWORD), 1, file);
 
-	std::cout << "File Size: " << m_fileSize << std::endl;
+
+	fwrite(&info.info_structure_size, sizeof(DWORD), 1, file);
+	fwrite(&info.m_width, sizeof(DWORD), 1, file);
+	fwrite(&info.m_height, sizeof(DWORD), 1, file);
+	fwrite(&info.planes, sizeof(WORD), 1, file);
+	fwrite(&info.bits_per_pixel, sizeof(WORD), 1, file);
+	fwrite(&info.compression, sizeof(DWORD), 1, file);
+	fwrite(&info.size_image, sizeof(DWORD), 1, file);
+	fwrite(&info.pixel_per_meter_X, sizeof(LONG), 1, file);
+	fwrite(&info.pixel_per_meter_Y, sizeof(LONG), 1, file);
+	fwrite(&info.color_table_size, sizeof(DWORD), 1, file);
+	fwrite(&info.color_important, sizeof(DWORD), 1, file);
 
 
-	std::cout << "Bits per pixel: " << m_BitsPerPixel << std::endl;
+	fseek(file, header.data_position, SEEK_SET);
+	BYTE zero = 0x00;
+	WORD color = 0x00;
+	for (int i = 0; i < info.m_height; ++i)
+	{
+		for (int j = 0; j < (data_line_size - padding_size) / m_channels; ++j)
+		{
+			if (info.bits_per_pixel == 16) 
+			{
+				color = 0x00;
+				color += ((mat[0](j, i) >> 3) & 0x1F) << 10;
+				color += ((mat[1](j, i) >> 3) & 0x1F) << 5;
+				color += ((mat[2](j, i) >> 3) & 0x1F) << 0;
+				fwrite(&color, sizeof(WORD), 1, file);
+			}
+			else
+			{
+				for (int k = 0; k < 3; ++k)
+					fwrite(&mat[3 - k - 1](j, i), sizeof(BYTE), 1, file);
+				if(m_channels == 4)
+					fwrite(&mat[m_channels - 1](j, i), sizeof(BYTE), 1, file);
+			}
+		}
+		for(int k = 0; k < padding_size; ++k)
+			fwrite(&zero, sizeof(BYTE), 1, file);
+	}
+	color = 0x00;
+	for (int k = 0; k < 2; ++k)
+		fwrite(&color, sizeof(BYTE), 1, file);
 
-	std::cout << "Header structure lenght: " << m_headerLenght << std::endl;
-	std::cout << "Info structure lenght: " << m_infoLenght << std::endl;
-	std::cout << "Data structure lenght: " << m_dataLenght << std::endl;
-
-	std::cout << "Row size with stride: " << m_rowSize << "\tstride bytes count: " << m_strideBytes << std::endl;
+	fclose(file);
 }
-
-
-//TODO: array to variables
-//TODO: variables to array
-void BMP::ArrayToVariables()
-{
-	// BMP Version - 3
-
-	m_fileSize = *(DWORD*)(&m_header[0x02]);
-	m_dataPosition = *(DWORD*)(&m_header[0x0A]);
-
-	m_width = abs(*(LONG*)(&m_info[0x04]));
-	m_height = abs(*(LONG*)(&m_info[0x08]));
-	m_BitsPerPixel = *(WORD*)(&m_info[0x0E]);
-	m_storageMethod = *(WORD*)(&m_info[0x10]);
-	m_pixelDataSize = *(DWORD*)(&m_info[0x14]);
-	m_bitsPerMeterX = *(LONG*)(&m_info[0x18]);
-	m_bitsPerMeterY = *(LONG*)(&m_info[0x1C]);
-	m_colorTableSize = *(DWORD*)(&m_info[0x20]);
-	m_colorTableNumberOfElements = *(DWORD*)(&m_info[0x24]);
-}
-void BMP::VariablesToArray()
-{
-	// BMP Version - 3
-
-	memset(&m_header[0x00], 'B', sizeof(BYTE));
-	memset(&m_header[0x01], 'M', sizeof(BYTE));
-
-	memcpy(&m_header[0x02], &m_fileSize, sizeof(DWORD));
-	memcpy(&m_header[0x0A], &m_dataPosition, sizeof(DWORD));
-
-	memcpy(&m_info[0x00], &m_infoLenght, sizeof(LONG));
-	memcpy(&m_info[0x04], &m_width, sizeof(LONG));
-	memcpy(&m_info[0x08], &m_height, sizeof(LONG));
-	memcpy(&m_info[0x0E], &m_BitsPerPixel, sizeof(WORD));
-	memcpy(&m_info[0x10], &m_storageMethod, sizeof(WORD));
-	memcpy(&m_info[0x14], &m_pixelDataSize, sizeof(DWORD));
-	memcpy(&m_info[0x18], &m_bitsPerMeterX, sizeof(LONG));
-	memcpy(&m_info[0x1C], &m_bitsPerMeterY, sizeof(LONG));
-	memcpy(&m_info[0x20], &m_colorTableSize, sizeof(DWORD));
-	memcpy(&m_info[0x24], &m_colorTableNumberOfElements, sizeof(DWORD));
-
-	memset(&m_info[0x0C], 1, sizeof(BYTE));
-}
-
-

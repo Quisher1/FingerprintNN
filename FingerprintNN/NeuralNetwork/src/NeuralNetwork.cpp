@@ -27,7 +27,7 @@ NeuralNetwork::NeuralNetwork(std::initializer_list<uint> layers)
 	m_biases[0] = matf(0, 0);
 	for (int i = 1; i < m_layersCount; ++i)
 	{
-		m_weights[i] = matf(m_layers[i-1], m_layers[i]);
+		m_weights[i] = matf(m_layers[i - 1], m_layers[i]);
 		m_biases[i] = matf(1, m_layers[i]);
 	}
 
@@ -67,12 +67,12 @@ void NeuralNetwork::feedForward()
 }
 
 void NeuralNetwork::backpropagation()
-{	
+{
 	m_deltaNeurons[m_layersCount - 1] = elementwiseMultiplication(sigmoid(m_neurons[m_layersCount - 1]) - m_expextedOutput, derivativedSigmoid(m_neurons[m_layersCount - 1]));
 	m_weights[m_layersCount - 1] -= learningRate * m_deltaNeurons[m_layersCount - 1] * sigmoid(m_neurons[m_layersCount - 2]).transpose();;
 	m_biases[m_layersCount - 1] -= learningRate * m_deltaNeurons[m_layersCount - 1];
-	
-	
+
+
 	for (int i = m_layersCount - 2; i > 0; --i)
 	{
 		m_deltaNeurons[i] = elementwiseMultiplication(m_weights[i + 1].transpose() * m_deltaNeurons[i + 1], derivativedSigmoid(m_neurons[i]));
@@ -125,7 +125,7 @@ const matf NeuralNetwork::getOutput()
 
 float NeuralNetwork::MSE(const matf& a, const matf& b)
 {
-	if(a.width() != b.width() ||
+	if (a.width() != b.width() ||
 		a.height() != b.height())
 		throw std::runtime_error("cannot calculate MSE. matrix sizes don\'t match");
 
@@ -159,7 +159,7 @@ matf NeuralNetwork::derivativedSigmoid(const matf& mat)
 
 void NeuralNetwork::save(const char* filename)
 {
-	if(m_layersCount == 0)
+	if (m_layersCount == 0)
 		throw std::runtime_error("nothing to save");
 
 	std::string str(filename); str += ".txt";
@@ -215,7 +215,7 @@ void NeuralNetwork::load(const char* filename)
 		{
 			for (int k = 0; k < m_layers[i]; ++k)
 			{
-				file >> m_weights[i+1](k, j);
+				file >> m_weights[i + 1](k, j);
 			}
 		}
 	}

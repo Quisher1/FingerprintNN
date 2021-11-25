@@ -34,10 +34,31 @@ Matrix<T>::Matrix<T>(const Matrix<T>& mat)
 	m_width = mat.m_width;
 	m_height = mat.m_height;
 	m_elements = new T[m_size];
-	for (int i = 0; i < m_size; ++i)
-		m_elements[i] = mat.m_elements[i];
+	//for (int i = 0; i < m_size; ++i)
+	//	m_elements[i] = mat.m_elements[i];
+	memcpy(m_elements, mat.m_elements, m_size);
 }
 
+template<typename T>
+Matrix<T> Matrix<T>::operator=(const Matrix<T>& mat)
+{
+	if (this == &mat)
+		return *this;
+
+	if (m_height != mat.m_height || m_width != mat.m_width)
+	{
+		m_size = mat.m_size;
+		m_height = mat.m_height;
+		m_width = mat.m_width;
+		delete[] m_elements;
+		m_elements = new T[m_size];
+
+	}
+	//for (int i = 0; i < m_size; ++i)
+	//	m_elements[i] = mat.m_elements[i];
+	memcpy(m_elements, mat.m_elements, m_size);
+	return *this;
+}
 
 template<typename T>
 Matrix<T>::~Matrix<T>()
@@ -200,27 +221,6 @@ Vector<T> Matrix<T>::operator*(const Vector<T>& vec)
 }
 
 
-template<typename T>
-Matrix<T> Matrix<T>::operator=(const Matrix<T>& mat)
-{
-	if (this == &mat)
-		return *this;
-
-	if (m_height != mat.m_height || m_width != mat.m_width)
-	{
-		m_size = mat.m_size;
-		m_height = mat.m_height;
-		m_width = mat.m_width;
-		delete[] m_elements;
-		m_elements = new T[m_size];
-
-	}
-	for (int i = 0; i < m_size; ++i)
-		m_elements[i] = mat.m_elements[i];
-	return *this;
-}
-
-
 //template<typename T>
 //Vector<T> Matrix<T>::operator*(const Vector<T>& vec)
 //{
@@ -270,8 +270,9 @@ Matrix<T> Matrix<T>::transpose()
 }
 
 
+template class Matrix<char>;
+template class Matrix<unsigned char>;
 template class Matrix<int>;
-template class Matrix<uint>;
+template class Matrix<unsigned int>;
 template class Matrix<float>;
 template class Matrix<double>;
-template class Matrix<char>;

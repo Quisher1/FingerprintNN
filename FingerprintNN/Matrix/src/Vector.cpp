@@ -164,8 +164,9 @@ Vector<T> Vector<T>::operator=(const Vector<T>& other)
 }
 
 
+template class Vector<char>;
+template class Vector<unsigned char>;
 template class Vector<int>;
-template class Vector<uint>;
+template class Vector<unsigned int>;
 template class Vector<float>;
 template class Vector<double>;
-template class Vector<char>;

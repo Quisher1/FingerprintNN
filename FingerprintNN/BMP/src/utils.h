@@ -7,13 +7,7 @@
 
 namespace utils
 {
-
-	// TODO: functions for changing bmp image
-
-	//TODO: may be work with matrix, instead of bmp
-
-
-
+	
 
 	// return value in range [0; 255]
 	inline BYTE clamp(int color)
@@ -25,7 +19,6 @@ namespace utils
 	double gauss(int x, int y, float sigma = 0.84089642f) { // 0.84089642f | 0.65041f
 		return (pow(2.7182818, -((x*x + y * y) / (2 * sigma*sigma))) / (2 * 3.14159*sigma*sigma));
 	}
-
 
 
 
@@ -235,24 +228,25 @@ namespace utils
 	}
 
 
-	Matrix<float>* convolution(const Matrix<BYTE>* matrices, uint numOfMatrices, const float* kernel, uint kernelSize, float divideFactor = -1)
+	Matrix<float>* convolution(const Matrix<BYTE>* matrices, uint numOfMatrices, const matf& kernel, float divideFactor = -1)
 	{
 		if (matrices == nullptr)
 			return nullptr;
-		if (kernelSize & 1 == 0)
+		if (kernel.width() != kernel.height() || (kernel.width() & 1 == 0 && kernel.height() & 1 == 0))
 			return nullptr;
 
-		Matrix<float>* output = new Matrix<float>[numOfMatrices];
+		uint kernelSize = kernel.width();
 
-		for (int i = 0; i < numOfMatrices; ++i)
-			output[i] = Matrix<float>(matrices[i].width(), matrices[i].height(), 0.0f);
+
+		Matrix<float>* output = new Matrix<float>[numOfMatrices];
 
 
 		if (divideFactor <= 0)
 		{
 			divideFactor = 0;
-			for (int i = 0; i < kernelSize * kernelSize; ++i)
-				divideFactor += kernel[i];
+			for (int i = 0; i < kernelSize; ++i)
+				for (int j = 0; j < kernelSize; ++j)
+					divideFactor += kernel(j, i);
 		}
 
 		int half = kernelSize / 2;
@@ -260,26 +254,25 @@ namespace utils
 
 		for (int k = 0; k < numOfMatrices; ++k)
 		{
+			output[k] = Matrix<float>(matrices[k].width(), matrices[k].height(), 0.0f);
 			for (int i = 0; i < matrices[k].height(); ++i)
 			{
 				for (int j = 0; j < matrices[k].width(); ++j)
 				{
 					sum = 0;
-					for (int y = -half; y < half; ++y)
+					for (int y = -1 * half; y <= half; ++y)
 					{
-						for (int x = -half; x < half; ++x)
+						for (int x = -1 * half; x <= half; ++x)
 						{
 							if (i + y < 0 || j + x < 0 || i + y >= matrices[k].height() || j + x >= matrices[k].width())
-							{
-
-							}
+							{}
 							else
 							{
-								sum += matrices[k](j + x, i + y) * kernel[(y + half) * kernelSize + x + half];
+								sum += matrices[k](j + x, i + y) * kernel(x + half, y + half);
 							}
 						}
 					}
-					output[i](j, i) = sum / divideFactor;
+					output[k](j, i) = sum / divideFactor;
 				}
 			}
 		}
@@ -288,228 +281,137 @@ namespace utils
 	}
 
 
-	Matrix<int>* gradient(const Matrix<BYTE>* matrices, uint numOfMatrices = 3)
+	enum SubSampling
+	{
+		AVG,
+		MAX
+	};
+
+	
+	// TODO: create subsampling function
+	/*Matrix<BYTE>* subSampling(const Matrix<BYTE>* matrices, uint numOfMatrices = 3, uint step = 1, uint size = 2, SubSampling type = SubSampling::MAX)
+	{
+		if (matrices == nullptr)
+			return nullptr;
+
+		Matrix<BYTE>* output = new Matrix<BYTE>[numOfMatrices];
+
+		BYTE max = 0;
+		uint AVG = 0;
+
+
+		int oi = 0, oj = 0;
+
+		for (int k = 0; k < numOfMatrices; ++k)
+		{
+			output[k] = Matrix<BYTE>(matrices[k].width() / size, 1);
+			for (int i = 0; i < matrices[k].height(); i += step)
+			{
+				oj = 0;
+				for (int j = 0; j < matrices[k].width(); j += step)
+				{
+					max = 0;
+					AVG = 0;
+					for (int y = i; y < i + size; ++y)
+					{
+						for (int x = j; x < j + size; ++x)
+						{
+							if (matrices[k](j, i) > max)
+								max = matrices[k](j, i);
+							AVG += matrices[k](j, i) / (size * size);
+						}
+					}
+					output[k](oj, oi) = type == SubSampling::MAX ? max : AVG;
+					oj++;
+				}
+				oi++;
+			}
+		}
+
+		return output;
+	}*/
+
+
+	/*Matrix<int>* gradientX(const Matrix<BYTE>* matrices, uint numOfMatrices = 3)
 	{
 		
 		return nullptr;
+	}*/
+
+	/*Matrix<int>* gradientY(const Matrix<BYTE>* matrices, uint numOfMatrices = 3)
+	{
+
+		return nullptr;
+	}*/
+
+
+	// abs difference
+	void difference(Matrix<BYTE>* matricesA, const Matrix<BYTE>* matricesB, uint numOfMatrices = 3, float threshold = 0)
+	{
+		if (matricesA == nullptr || matricesB == nullptr)
+			return;
+		if (matricesA->width() != matricesB->width() || matricesA->height() != matricesB->height())
+			return;
+
+		for (int k = 0; k < numOfMatrices; ++k)
+		{
+			for (int i = 0; i < matricesA[k].height(); ++i)
+			{
+				for (int j = 0; j < matricesA[k].width(); ++j)
+				{
+					if(abs(matricesA[k](j, i) * 100 / 255 - matricesB[k](j, i) * 100 / 255) < threshold)
+						matricesA[k](j, i) = 0;
+					else
+						matricesA[k](j, i) = clamp(abs((int)matricesA[k](j, i) - (int)matricesB[k](j, i)));
+
+				}
+			}
+		}
 	}
 
-	//void grayscale(BMP& bmp, float R_channel = 0.2126f, float G_channel = 0.7152f, float B_channel = 0.0722f)
-	//{
-	//	BYTE gray;
-	//	for (int i = 0; i < bmp.height(); ++i)
-	//	{
-	//		for (int j = 0; j < bmp.width(); ++j)
-	//		{
-	//			if (bmp.bitsPerPixel() == 16)
-	//			{
-	//				rgb555 c(bmp.getPixel(j, i), 16);
-	//				gray = c.r * R_channel + c.g * G_channel + c.b * B_channel;
-	//				bmp.setPixel(j, i, gray, gray, gray);
-	//			}
-	//			else if (bmp.bitsPerPixel() > 16)
-	//			{
-	//				rgba c(bmp.getPixel(j, i), 32);
-	//				gray = c.r * R_channel + c.g * G_channel + c.b * B_channel;
-	//				bmp.setPixel(j, i, gray, gray, gray, c.a);
-	//			}
-	//		}
-	//	}
-	//}
-	
+	void substract(Matrix<BYTE>* matricesA, const Matrix<BYTE>* matricesB, uint numOfMatrices = 3)
+	{
+		if (matricesA == nullptr || matricesB == nullptr)
+			return;
+		if (matricesA->width() != matricesB->width() || matricesA->height() != matricesB->height())
+			return;
 
-	//void negative(BMP& bmp)
-	//{
-	//	for (int i = 0; i < bmp.height(); ++i)
-	//	{
-	//		for (int j = 0; j < bmp.width(); ++j)
-	//		{
-	//			if (bmp.bitsPerPixel() == 16)
-	//			{
-	//				rgb555 c(bmp.getPixel(j, i), 16);
-	//				bmp.setPixel(j, i, 255 - c.r, 255 - c.g, 255 - c.b);
-	//			}
-	//			else if (bmp.bitsPerPixel() > 16)
-	//			{
-	//				rgba c(bmp.getPixel(j, i), 32);
-	//				bmp.setPixel(j, i, 255 - c.r, 255 - c.g, 255 - c.b, c.a);
-	//			}
-	//		}
-	//	}
-	//}
+		for (int k = 0; k < numOfMatrices; ++k)
+		{
+			for (int i = 0; i < matricesA[k].height(); ++i)
+			{
+				for (int j = 0; j < matricesA[k].width(); ++j)
+				{
+					matricesA[k](j, i) = clamp(matricesA[k](j, i) - matricesB[k](j, i));
+				}
+			}
+		}
+	}
+	void add(Matrix<BYTE>* matricesA, const Matrix<BYTE>* matricesB, uint numOfMatrices = 3)
+	{
+		if (matricesA == nullptr || matricesB == nullptr)
+			return;
+		if (matricesA->width() != matricesB->width() || matricesA->height() != matricesB->height())
+			return;
 
-
-	//void logTransformation(BMP& grayscaleBmp, BYTE maxColor = 255)
-	//{
-	//	BYTE gray = 0;
-	//	float c = 255.0f / std::log10(1 + int(maxColor));
-	//
-	//	for (int i = 0; i < grayscaleBmp.height(); ++i)
-	//	{
-	//		for (int j = 0; j < grayscaleBmp.width(); ++j)
-	//		{
-	//			if (grayscaleBmp.bitsPerPixel() == 16)
-	//			{
-	//				rgb555 color(grayscaleBmp.getPixel(j, i), 16);
-	//				gray = color.r & color.g & color.b;
-	//				gray = c * std::log10(1 + int(gray));
-	//				grayscaleBmp.setPixel(j, i, gray, gray, gray);
-	//			}
-	//			else if (grayscaleBmp.bitsPerPixel() > 16)
-	//			{
-	//				rgba color(grayscaleBmp.getPixel(j, i), 32);
-	//				gray = color.r & color.g & color.b;
-	//				gray = c * std::log10(1 + int(gray));
-	//				grayscaleBmp.setPixel(j, i, gray, gray, gray, color.a);
-	//			}
-	//		}
-	//	}
-	//}
-
-
-	//void gaussianBlur(BMP& bmp, int windowSize = 3, float windowDivisionFactor = -1, float sigma = 0.84089642)
-	//{
-	//	float* window = new float[windowSize * windowSize];
-	//	float sum = 0;
-	//	for (int i = 0; i < windowSize; ++i)
-	//		for (int j = 0; j < windowSize; ++j)
-	//			window[i * windowSize + j] = gauss(j - windowSize / 2, i - windowSize / 2);
-	//
-	//	BMP newbmp = bmp;
-	//	float r, g, b;
-	//	BYTE a = 0;
-	//
-	//	if (windowDivisionFactor < 0)
-	//	{
-	//		windowDivisionFactor = 0;
-	//		for (int i = 0; i < windowSize * windowSize; ++i)
-	//			windowDivisionFactor += window[i];
-	//	}
-	//
-	//	for (int i = 0; i < bmp.height(); ++i)
-	//	{
-	//		for (int j = 0; j < bmp.width(); ++j)
-	//		{
-	//			r = g = b = 0;
-	//			for (int y = -1 * windowSize / 2; y <= windowSize / 2; ++y)
-	//			{
-	//				for (int x = -1 * windowSize / 2; x <= windowSize / 2; ++x)
-	//				{
-	//					if (i + y < 0 || j + x < 0 || i + y >= bmp.height() || j + x >= bmp.width())
-	//					{
-	//
-	//					}
-	//					else
-	//					{
-	//						if (bmp.bitsPerPixel() == 16)
-	//						{
-	//							rgb555 color(bmp.getPixel(j + x, i + y), 16);
-	//							r += color.r * window[(y + windowSize / 2) * windowSize + x + windowSize / 2];
-	//							g += color.g * window[(y + windowSize / 2) * windowSize + x + windowSize / 2];
-	//							b += color.b * window[(y + windowSize / 2) * windowSize + x + windowSize / 2];
-	//						}
-	//						else if (bmp.bitsPerPixel() > 16)
-	//						{
-	//							rgba color(bmp.getPixel(j + x, i + y), 32);
-	//							r += color.r * window[(y + windowSize / 2) * windowSize + x + windowSize / 2];
-	//							g += color.g * window[(y + windowSize / 2) * windowSize + x + windowSize / 2];
-	//							b += color.b * window[(y + windowSize / 2) * windowSize + x + windowSize / 2];
-	//							a = color.a;
-	//						}
-	//					}
-	//				}
-	//			}
-	//			r /= windowDivisionFactor;
-	//			g /= windowDivisionFactor;
-	//			b /= windowDivisionFactor;
-	//			newbmp.setPixel(j, i, r, g, b, a);
-	//		}
-	//	}
-	//	bmp = newbmp;
-	//
-	//	delete[] window;
-	//}
+		for (int k = 0; k < numOfMatrices; ++k)
+		{
+			for (int i = 0; i < matricesA[k].height(); ++i)
+			{
+				for (int j = 0; j < matricesA[k].width(); ++j)
+				{
+					matricesA[k](j, i) = clamp(matricesA[k](j, i) + matricesB[k](j, i));
+				}
+			}
+		}
+	}
 
 
 
-	//void noise(BMP &image, float mean = 0.0f, float stddiv = 0.316f, float threshold = 50) { // Gaussian noise
-	//
-	//	std::random_device rd;
-	//	std::mt19937 gen(rd());
-	//	std::normal_distribution<float> d(mean, stddiv);
-	//
-	//	std::uniform_real_distribution<float> distribution(0, 100);
-	//	std::mt19937 engine(rd()); // Mersenne twister MT19937
-	//
-	//
-	//	int rand;
-	//	for (int i = 0; i < image.height(); ++i) {
-	//		for (int j = 0; j < image.width(); ++j) {
-	//			//std::cout << distribution(engine) << std::endl;
-	//			if (distribution(engine) <= threshold)
-	//			{
-	//				rand = d(gen);
-	//				if (image.bitsPerPixel() == 16)
-	//				{
-	//					rgb555 c(image.getPixel(j, i), image.bitsPerPixel());
-	//					image.setPixel(j, i, clamp(c.r + rand), clamp(c.g + rand), clamp(c.b + rand));
-	//				}
-	//				else if (image.bitsPerPixel() > 16)
-	//				{
-	//					rgba c(image.getPixel(j, i), image.bitsPerPixel());
-	//					image.setPixel(j, i, clamp(c.r + rand), clamp(c.g + rand), clamp(c.b + rand), c.a);
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-	
 
-	//int compare(const void * a, const void * b)
-	//{
-	//	return (*(int*)a - *(int*)b);
-	//}
-	//
-	//void medianFilter(BMP& bmp, int windowSize = 3)
-	//{
-	//	BMP newbmp = bmp;
-	//	DWORD *arr = new DWORD[windowSize * windowSize];
-	//	int k = 0;
-	//
-	//	for (int i = 0; i < bmp.height(); ++i)
-	//	{
-	//		for (int j = 0; j < bmp.width(); ++j)
-	//		{
-	//			k = 0;
-	//			for (int y = -1 * windowSize / 2; y <= windowSize / 2; ++y)
-	//			{
-	//				for (int x = -1 * windowSize / 2; x <= windowSize / 2; ++x)
-	//				{
-	//					if (j + x < 0 || j + x >= bmp.width() || i + y < 0 || i + y >= bmp.height())
-	//						arr[k] = 0;
-	//					else
-	//						arr[k] = bmp.getPixel(j + x, i + y);
-	//					++k;
-	//				}
-	//			}
-	//
-	//			//std::sort(arr, arr + windowSize * windowSize - 1);
-	//			qsort(arr, windowSize * windowSize - 1, sizeof(DWORD), compare);
-	//
-	//			if (bmp.bitsPerPixel() == 16)
-	//			{
-	//				rgb555 color((DWORD)arr[windowSize * windowSize / 2], bmp.bitsPerPixel());
-	//				newbmp.setPixel(j, i, color.r, color.g, color.b, 0);
-	//			}
-	//			else if (bmp.bitsPerPixel() > 16)
-	//			{
-	//				rgba color(arr[windowSize * windowSize / 2], bmp.bitsPerPixel());
-	//				newbmp.setPixel(j, i, color.r, color.g, color.b, color.a);
-	//			}
-	//		}
-	//	}
-	//	bmp = newbmp;
-	//	delete[] arr;
-	//}
+	// TODO: 2D matrix to 1D matrix / vector
+
+
+
 
 }

@@ -177,7 +177,7 @@ void NeuralNetwork::save(const char* filename)
 	}
 	file << std::endl;
 
-	// tODO: save properties of NN
+	// tODO: save properties of NN {activation function, learning rate and etc}
 
 	for (int i = 1; i < m_layersCount; ++i)
 	{

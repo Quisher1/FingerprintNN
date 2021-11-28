@@ -78,7 +78,7 @@ BMP::BMP(DWORD width, DWORD height, rgb fillcolor, std::string filename, BMPForm
 	else
 		m_matrix_channels = m_channels;
 
-	data_line_size = (((info.bits_per_pixel * width) + 31) & ~31) >> 3;
+	data_line_size = (((int(format) * width) + 31) & ~31) >> 3;
 	padding_size = data_line_size - width * m_channels;
 
 	header.bmp_type = 0x4D42;
@@ -105,6 +105,124 @@ BMP::BMP(DWORD width, DWORD height, rgb fillcolor, std::string filename, BMPForm
 	for (int i = 0; i < m_matrix_channels; ++i)
 		mat[i] = Matrix<BYTE>(info.m_width, info.m_height, arr[i]);
 }
+
+
+// TODO: function to load basic info instead of copying stuff
+
+BMP::BMP(const Matrix<BYTE>& grayscale, std::string filename, BMPFormat format)
+	: m_filename(filename)
+{
+	m_channels = int(format) / 8;
+	if (format == 16)
+		m_matrix_channels = 3;
+	else
+		m_matrix_channels = m_channels;
+
+	uint width = grayscale.width();
+	uint height = grayscale.height();
+
+
+	data_line_size = (((int(format) * width) + 31) & ~31) >> 3;
+	padding_size = data_line_size - width * m_channels;
+
+	header.bmp_type = 0x4D42;
+	header.file_size = 14 + 50 + data_line_size * height;
+	header.reserv_1 = 0;
+	header.reserv_2 = 0;
+	header.data_position = 0x36;
+
+	info.info_structure_size = 0x28;
+	info.m_width = width;
+	info.m_height = height;
+	info.planes = 1;
+	info.bits_per_pixel = format;
+	info.compression = 0;
+	info.size_image = data_line_size * height + 2/*file ending*/;
+	info.pixel_per_meter_X = 2834;
+	info.pixel_per_meter_Y = 2834;
+	info.color_table_size = 0;
+	info.color_important = 0;
+
+
+	mat = new Matrix<BYTE>[m_matrix_channels];
+	mat[0] = Matrix<BYTE>(width, height);
+	mat[1] = Matrix<BYTE>(width, height);
+	mat[2] = Matrix<BYTE>(width, height);
+	if (m_matrix_channels == 4)
+		mat[3] = Matrix<BYTE>(width, height);
+
+	for (int i = 0; i < width; ++i)
+	{
+		for (int j = 0; j < height; ++j)
+		{
+			mat[0](j, i) = grayscale(j, i);
+			mat[1](j, i) = grayscale(j, i);
+			mat[2](j, i) = grayscale(j, i);
+			if(m_matrix_channels == 4)
+				mat[3](j, i) = 255;
+		}
+	}
+}
+
+BMP::BMP(const Matrix<BYTE>& r, const Matrix<BYTE>& g, const Matrix<BYTE>& b, std::string filename, BMPFormat format)
+	: m_filename(filename)
+{
+	m_channels = int(format) / 8;
+	if (format == 16)
+		m_matrix_channels = 3;
+	else
+		m_matrix_channels = m_channels;
+
+	if (r.width() != g.width() && r.width() != g.width() ||
+		r.height() != g.height() && r.height() != g.height())
+		throw std::runtime_error("matrices are not equal רע sizes");
+
+	uint width = r.width();
+	uint height = r.height();
+
+
+	data_line_size = (((int(format) * width) + 31) & ~31) >> 3;
+	padding_size = data_line_size - width * m_channels;
+
+	header.bmp_type = 0x4D42;
+	header.file_size = 14 + 50 + data_line_size * height;
+	header.reserv_1 = 0;
+	header.reserv_2 = 0;
+	header.data_position = 0x36;
+
+	info.info_structure_size = 0x28;
+	info.m_width = width;
+	info.m_height = height;
+	info.planes = 1;
+	info.bits_per_pixel = format;
+	info.compression = 0;
+	info.size_image = data_line_size * height + 2/*file ending*/;
+	info.pixel_per_meter_X = 2834;
+	info.pixel_per_meter_Y = 2834;
+	info.color_table_size = 0;
+	info.color_important = 0;
+
+
+	mat = new Matrix<BYTE>[m_matrix_channels];
+	mat[0] = Matrix<BYTE>(width, height);
+	mat[1] = Matrix<BYTE>(width, height);
+	mat[2] = Matrix<BYTE>(width, height);
+	if (m_matrix_channels == 4)
+		mat[3] = Matrix<BYTE>(width, height);
+
+	for (int i = 0; i < width; ++i)
+	{
+		for (int j = 0; j < height; ++j)
+		{
+			mat[0](j, i) = r(j, i);
+			mat[1](j, i) = g(j, i);
+			mat[2](j, i) = b(j, i);
+			if (m_matrix_channels == 4)
+				mat[3](j, i) = 255;
+		}
+	}
+}
+
 
 BMP::~BMP()
 {

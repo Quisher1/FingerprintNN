@@ -5,45 +5,221 @@
 #include "src/math.h"
 
 #include <fstream>
+ 
+
+//DFT
+
+#define PI 3.14159265
+
+static std::pair<matf, matf> DFT1D(const matf& data) {
+	
+	std::pair<matf, matf> Real_Imaginary;
+
+	Real_Imaginary.first = matf(data.width(), data.height());
+	Real_Imaginary.second = matf(data.width(), data.height());
+
+	uint N = data.width();
+	uint M = data.height();
+
+	float Resum, Imsum;
+
+	for (int i = 0; i < M; ++i) 
+	{
+		for (int j = 0; j < N; ++j)
+		{
+			Resum = Imsum = 0;
+			for (int n = 0; n < N; ++n)
+			{
+				Resum += pow(-1, n) * data(n, i) * std::cosf(-(2 * PI * j * n) / N);
+				Imsum += pow(-1, n) * data(n, i) * std::sinf(-(2 * PI * j * n) / N);
+			}
+			Real_Imaginary.first(j, i)  = Resum / N;
+			Real_Imaginary.second(j, i) = Imsum / N;
+		}
+	}
+	return Real_Imaginary;
+}
 
 
+static std::pair<matf, matf> DFT2D(const matf& data) {
+	std::pair<matf, matf> Real_Imaginary_1D = DFT1D(data);
+
+	std::pair<matf, matf> Real_Imaginary_2D;
+	Real_Imaginary_2D.first = matf(data.width(), data.height());
+	Real_Imaginary_2D.second = matf(data.width(), data.height());
+
+	uint N = data.width();
+	uint M = data.height();
+
+	float Resum, Imsum;
+	for (int j = 0; j < N; ++j)
+	{
+		for (int i = 0; i < M; ++i)
+		{
+			Resum = Imsum = 0;
+			for (int m = 0; m < M; ++m)
+			{
+				Resum += pow(-1, m) * (Real_Imaginary_1D.first(j, m) * std::cosf( (2 * PI * i * m) / M) - Real_Imaginary_1D.second(j, m) * std::sinf(-(2 * PI * i * m) / M));
+				Imsum += pow(-1, m) * (Real_Imaginary_1D.first(j, m) * std::sinf(-(2 * PI * i * m) / M) + Real_Imaginary_1D.second(j, m) * std::cosf( (2 * PI * i * m) / M));
+			}
+			Real_Imaginary_2D.first(j, i)  = Resum / M;
+			Real_Imaginary_2D.second(j, i) = Imsum / M;
+		}
+	}
+	return Real_Imaginary_2D;
+}
+
+static matf IDFT1D(const std::pair<matf, matf>& data) {
+	matf result = matf(data.first.width(), data.first.height());
+
+	uint N = result.width();
+	uint M = result.height();
+
+	float Resum, Imsum;
+
+	for (int i = 0; i < M; ++i)
+	{
+		for (int j = 0; j < N; ++j)
+		{
+			Resum = Imsum = 0;
+			for (int n = 0; n < N; ++n)
+			{
+				Resum += data.first(n, i) * cosf(2 * PI * j * n / N) - data.second(n, i) * sinf(2 * PI * j * n / N);
+				Imsum += data.first(n, i) * sinf(2 * PI * j * n / N) + data.second(n, i) * cosf(2 * PI * j * n / N);
+			}
+			result(j, i) = pow(-1, j) * (Resum + Imsum);
+		}
+	}
+	return result;
+}
+static matf IDFT2D(const std::pair<matf, matf>& data) {
+	matf result = matf(data.first.width(), data.first.height());
+
+	uint N = result.width();
+	uint M = result.height();
+
+	float Resum, Imsum;
+
+	
+	std::pair<matf, matf> inverse_Real_Imaginary_1D;
+	inverse_Real_Imaginary_1D.first = matf(data.first.width(), data.first.height());
+	inverse_Real_Imaginary_1D.second = matf(data.first.width(), data.first.height());
+	// inverse 1D calculations
+	for (int i = 0; i < M; ++i)
+	{
+		for (int j = 0; j < N; ++j)
+		{
+			Resum = Imsum = 0;
+			for (int n = 0; n < N; ++n)
+			{
+				Resum += data.first(n, i) * cosf(2 * PI * j * n / N) - data.second(n, i) * sinf(2 * PI * j * n / N);
+				Imsum += data.first(n, i) * sinf(2 * PI * j * n / N) + data.second(n, i) * cosf(2 * PI * j * n / N);
+			}
+			inverse_Real_Imaginary_1D.first(j, i)  = Resum;
+			inverse_Real_Imaginary_1D.second(j, i) = Imsum;
+		}
+	}
+	////
+
+	for (int j = 0; j < N; ++j)
+	{
+		for (int i = 0; i < M; ++i)
+		{
+			Resum = Imsum = 0;
+			for (int m = 0; m < M; ++m)
+			{
+				Resum += inverse_Real_Imaginary_1D.first(j, m) * cosf(2 * PI * i * m / M) - inverse_Real_Imaginary_1D.second(j, m) * sinf(2 * PI * i * m / M);
+				Imsum += inverse_Real_Imaginary_1D.first(j, m) * sinf(2 * PI * i * m / M) + inverse_Real_Imaginary_1D.second(j, m) * cosf(2 * PI * i * m / M);
+			}
+			result(j, i) = pow(-1, j + i) * (Resum + Imsum);
+		}
+	}
+	return result;
+}
 
 int main()
 {
 	//try
 	//{
 
-		rgb color = rgb::WHITE;//(0, 0, 0);
-		//BMP bmp("coins");
+
+
+	//std::cout << InverseFourier2D(Fourier2D(mat)) << std::endl;
+
+
+		//rgb color = rgb::WHITE;//(0, 0, 0);
+		//
+		//BMP bmp1("1");
+		//
+		//BMP bmp2("2");
+		//utils::gaussianBlur(res.at(0));
+		//utils::medianFilter(res.at(0));
+
 		
-		BMP bmp("coins");
-
-		utils::grayscale(bmp.at(0));
+		//utils::gaussianBlur(res.at(0));
 
 
-		float *kernel = new float[9];
+		//utils::difference(bmp2.at(0), bmp1.at(0));
 
-		kernel[0] = -1; kernel[1] = 0; kernel[2] = 1;
-		kernel[3] = -2; kernel[4] = 0; kernel[5] = 2;
-		kernel[6] = -1; kernel[7] = 0; kernel[8] = 1;
+
+		//(*bmp2.at(0)) *= 1;
+
+		//for (int i = 0; i < bmp2.at(0)->height(); ++i)
+		//	for (int j = 0; j < bmp2.at(0)->width(); ++j) {
+		//		(*bmp2.at(0))(j, i) = utils::clamp((*bmp2.at(0))(j, i) * 1000);
+		//		(*bmp2.at(1))(j, i) = utils::clamp((*bmp2.at(1))(j, i) * 1000);
+		//		(*bmp2.at(2))(j, i) = utils::clamp((*bmp2.at(2))(j, i) * 1000);
+		//	}
+
+
+		//(*bmp2.at(1)) *= 0;
+		//(*bmp2.at(2)) *= 0;
+
+
+		//utils::medianFilter(bmp2.at(0), 3, 5);
+
+		//utils::add(bmp1.at(0), bmp2.at(0));
 		
 
 
-		Matrix<float>* mat = utils::convolution(bmp.at(0), 1, kernel, 3);
+		//bmp1.saveAs("image1");
+		//bmp2.saveAs("image2");
 
 
-		BMP im(mat[0].width(), mat[0].height(), rgb(0, 0, 0), "default", BMP24);
 
-		for (int i = 0; i < im.height; ++i)
-		{
-			for (int j = 0; j < im.height; ++j)
-			{
-				BYTE color = utils::clamp(mat[0](j, i));
-				im.setPixel(j, i, color, color, color);
-			}
-		}
+		//utils::grayscale(bmp.at(0));
 
-		im.saveAs("image2");
+		//matf kernel(3, 3);
+		//kernel(0, 0) = -1; kernel(1, 0) = 0; kernel(2, 0) = 1;
+		//kernel(0, 1) = -2; kernel(1, 1) = 0; kernel(2, 1) = 2;
+		//kernel(0, 2) = -1; kernel(1, 2) = 0; kernel(2, 2) = 1;
+		//
+
+
+
+
+		//Matrix<float>* mat = utils::convolution(bmp.at(0), 1, kernel, 1020);
+		//kernel = kernel.transpose();
+		//Matrix<float>* mat1 = utils::convolution(bmp.at(0), 1, kernel, 1020);
+
+
+		//BMP res(mat[0].width(), mat[0].height(), rgb(0, 0, 0), "default", BMP24);
+
+		//for (int i = 0; i < res.height; ++i)
+		//{
+		//	for (int j = 0; j < res.width; ++j)
+		//	{
+		//		BYTE color = utils::clamp((abs(mat[0](j, i)) + abs(mat1[0](j, i))) * 255 * 5);
+		//		res.setPixel(j, i, color, color, color);
+		//	}
+		//}
+
+		////utils::negative(res.at(0));
+		////utils::medianFilter(res.at(0));
+
+		//utils::gaussianBlur(res.at(0));
+
+		//bmp.saveAs("image2");
 
 		//bmp.saveAs("image2");
 

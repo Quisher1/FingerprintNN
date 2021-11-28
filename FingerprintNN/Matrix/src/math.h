@@ -27,6 +27,7 @@ static Matrix<T> applyFunction(const Matrix<T>& mat, float(*func)(float))
 }
 
 
+
 //template<typename T>
 //static double dot(const Vector<T>& a, const Vector<T>& b)
 //{

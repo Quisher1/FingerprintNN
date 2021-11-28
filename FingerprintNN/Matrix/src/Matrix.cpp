@@ -13,7 +13,7 @@ Matrix<T>::Matrix(uint width, uint height, const T* source)
 {
 	m_elements = new T[width * height];
 
-	memcpy(m_elements, source, width * height * sizeof(T));
+	memcpy(m_elements, source, sizeof(T) * width * height);
 }
 
 
@@ -36,7 +36,7 @@ Matrix<T>::Matrix<T>(const Matrix<T>& mat)
 	m_elements = new T[m_size];
 	//for (int i = 0; i < m_size; ++i)
 	//	m_elements[i] = mat.m_elements[i];
-	memcpy(m_elements, mat.m_elements, m_size);
+	memcpy(m_elements, mat.m_elements, sizeof(T) * m_size);
 }
 
 template<typename T>
@@ -56,7 +56,7 @@ Matrix<T> Matrix<T>::operator=(const Matrix<T>& mat)
 	}
 	//for (int i = 0; i < m_size; ++i)
 	//	m_elements[i] = mat.m_elements[i];
-	memcpy(m_elements, mat.m_elements, m_size);
+	memcpy(m_elements, mat.m_elements, sizeof(T) * m_size);
 	return *this;
 }
 
@@ -256,13 +256,14 @@ void Matrix<T>::identity()
 template<typename T>
 Matrix<T> Matrix<T>::transpose()
 {
-	Matrix<T> res(m_height, m_width);
+	Matrix<T> res(m_height, m_width, 0.0);
 
 	for (int i = 0; i < m_height; ++i)
 	{
 		for (int j = 0; j < m_width; ++j)
 		{
-			res.m_elements[j * m_height + i] = m_elements[i * m_width + j];
+			//res.m_elements[j * m_height + i] = m_elements[i * m_width + j];
+			res(i, j) = this->operator()(j, i);
 		}
 	}
 

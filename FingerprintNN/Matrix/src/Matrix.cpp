@@ -50,7 +50,8 @@ Matrix<T> Matrix<T>::operator=(const Matrix<T>& mat)
 		m_size = mat.m_size;
 		m_height = mat.m_height;
 		m_width = mat.m_width;
-		delete[] m_elements;
+		if(m_elements != nullptr)
+			delete[] m_elements;
 		m_elements = new T[m_size];
 
 	}

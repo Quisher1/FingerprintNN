@@ -43,14 +43,26 @@ NeuralNetwork::~NeuralNetwork()
 		delete[] m_neurons;
 		delete[] m_weights;
 		delete[] m_biases;
+		delete[] m_layers;
+
+		m_deltaNeurons = nullptr;
+		m_neurons = nullptr;
+		m_weights = nullptr;
+		m_biases = nullptr;
+		m_layers = nullptr;
 	}
 }
 
 
 void NeuralNetwork::setInput(const matf& input)
 {
-	if (m_neurons[0].width() != input.width() || m_neurons[0].height() != input.height())
+	m_layers;
+
+	if (m_neurons[0].width() != input.width() || m_neurons[0].height() != input.height()) {
+		std::cout << m_neurons[0].width() << " != " << input.width() << " | " <<
+			m_neurons[0].height() << " != " << input.height() << std::endl;
 		throw std::runtime_error("input sizes don\'t match");
+	}
 	m_neurons[0] = input;
 }
 void NeuralNetwork::setExpectedOutput(const matf& expectedOutput)
@@ -69,16 +81,17 @@ void NeuralNetwork::feedForward()
 void NeuralNetwork::backpropagation()
 {
 	m_deltaNeurons[m_layersCount - 1] = elementwiseMultiplication(sigmoid(m_neurons[m_layersCount - 1]) - m_expextedOutput, derivativedSigmoid(m_neurons[m_layersCount - 1]));
-	m_weights[m_layersCount - 1] -= learningRate * m_deltaNeurons[m_layersCount - 1] * sigmoid(m_neurons[m_layersCount - 2]).transpose();;
-	m_biases[m_layersCount - 1] -= learningRate * m_deltaNeurons[m_layersCount - 1];
+	m_weights[m_layersCount - 1] -= m_learningRate * m_deltaNeurons[m_layersCount - 1] * sigmoid(m_neurons[m_layersCount - 2]).transpose();;
+	m_biases[m_layersCount - 1] -= m_learningRate * m_deltaNeurons[m_layersCount - 1];
 
 
 	for (int i = m_layersCount - 2; i > 0; --i)
 	{
 		m_deltaNeurons[i] = elementwiseMultiplication(m_weights[i + 1].transpose() * m_deltaNeurons[i + 1], derivativedSigmoid(m_neurons[i]));
-		m_weights[i] -= learningRate * m_deltaNeurons[i] * (i == 1 ? m_neurons[i - 1].transpose() : sigmoid(m_neurons[i - 1]).transpose());
-		m_biases[i] -= learningRate * m_deltaNeurons[i];
+		m_weights[i] -= m_learningRate * m_deltaNeurons[i] * (i == 1 ? m_neurons[i - 1].transpose() : sigmoid(m_neurons[i - 1]).transpose());
+		m_biases[i] -= m_learningRate * m_deltaNeurons[i];
 	}
+
 }
 
 void NeuralNetwork::randomizeWeightsBiases()
@@ -98,7 +111,10 @@ void NeuralNetwork::randomizeWeightsBiases()
 	}
 }
 
-
+void NeuralNetwork::setLearningrate(float learning_rate)
+{
+	m_learningRate = learning_rate;
+}
 
 
 void NeuralNetwork::infoLog()
@@ -203,10 +219,46 @@ void NeuralNetwork::load(const char* filename)
 		throw std::runtime_error("file loading problem");
 
 	file >> m_layersCount;
+	if (m_layers != nullptr) {
+		delete[] m_layers;
+		m_layers = nullptr;
+	}
+	m_layers = new uint[m_layersCount];
 	for (int i = 0; i < m_layersCount; ++i)
 	{
 		file >> m_layers[i];
 	}
+
+	if (m_weights != nullptr)
+	{
+		delete[] m_deltaNeurons;
+		delete[] m_neurons;
+		delete[] m_weights;
+		delete[] m_biases;
+	}
+	m_deltaNeurons = new matf[m_layersCount];
+	m_neurons = new matf[m_layersCount];
+	m_weights = new matf[m_layersCount];
+	m_biases = new matf[m_layersCount];
+
+	for (int i = 0; i < m_layersCount; ++i)
+	{
+		m_neurons[i] = matf(1, m_layers[i]);
+		m_deltaNeurons[i] = matf(1, m_layers[i]);
+	}
+
+	m_weights[0] = matf(0, 0);
+	m_biases[0] = matf(0, 0);
+	for (int i = 1; i < m_layersCount; ++i)
+	{
+		m_weights[i] = matf(m_layers[i - 1], m_layers[i]);
+		m_biases[i] = matf(1, m_layers[i]);
+	}
+
+	m_input = &m_neurons[0];
+	m_output = &m_neurons[m_layersCount - 1];
+	
+
 	m_weights[0] = matf(0, 0);
 	for (int i = 0; i < m_layersCount - 1; ++i)
 	{

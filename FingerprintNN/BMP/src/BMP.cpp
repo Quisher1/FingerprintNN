@@ -151,9 +151,9 @@ BMP::BMP(const Matrix<BYTE>& grayscale, std::string filename, BMPFormat format)
 	if (m_matrix_channels == 4)
 		mat[3] = Matrix<BYTE>(width, height);
 
-	for (int i = 0; i < width; ++i)
+	for (int i = 0; i < height; ++i)
 	{
-		for (int j = 0; j < height; ++j)
+		for (int j = 0; j < width; ++j)
 		{
 			mat[0](j, i) = grayscale(j, i);
 			mat[1](j, i) = grayscale(j, i);
@@ -210,9 +210,9 @@ BMP::BMP(const Matrix<BYTE>& r, const Matrix<BYTE>& g, const Matrix<BYTE>& b, st
 	if (m_matrix_channels == 4)
 		mat[3] = Matrix<BYTE>(width, height);
 
-	for (int i = 0; i < width; ++i)
+	for (int i = 0; i < height; ++i)
 	{
-		for (int j = 0; j < height; ++j)
+		for (int j = 0; j < width; ++j)
 		{
 			mat[0](j, i) = r(j, i);
 			mat[1](j, i) = g(j, i);
@@ -312,8 +312,10 @@ void BMP::fileToStructs(std::string filename)
 
 	if (info.bits_per_pixel == 16)
 		m_matrix_channels = 3;
-	else
+	else if (info.bits_per_pixel > 16)
 		m_matrix_channels = m_channels;
+	else
+		throw std::runtime_error("images with this color depth are not supported");
 
 
 	data_line_size = (((info.bits_per_pixel * width) + 31) & ~31) >> 3;

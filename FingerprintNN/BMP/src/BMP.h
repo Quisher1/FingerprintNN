@@ -56,7 +56,7 @@ public:
 	BMP(DWORD width, DWORD height, rgb fillcolor, std::string filename, BMPFormat format = BMP24);
 	
 
-	BMP(const Matrix<BYTE>& grayscale, std::string filename, BMPFormat format = BMP24);
+	BMP(const Matrix<BYTE>& grayscale, std::string filename = "default", BMPFormat format = BMP24);
 	BMP(const Matrix<BYTE>& r, const Matrix<BYTE>& g, const Matrix<BYTE>& b, std::string filename, BMPFormat format = BMP24);
 
 	~BMP();

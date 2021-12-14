@@ -7,7 +7,7 @@
 
 #include <fstream>
  
-
+using namespace BMP_lib;
 
 float AVG(const Matrix<float>* mat, uint x, uint y, uint width, uint height)
 {
@@ -23,9 +23,6 @@ float AVG(const Matrix<float>* mat, uint x, uint y, uint width, uint height)
 	}
 	return avg / count;
 }
-
-
-
 
 
 Matrix<float> rotateMatrix(const Matrix<float>* mat, float angle)
@@ -155,6 +152,7 @@ int main()
 	
 	return 0;*/
 
+
 	// DFT tests
 	/*BMP img("car");
 	utils::grayscale(img.at(0));
@@ -183,7 +181,7 @@ int main()
 	{
 		for (int j = 0; j < img.width; ++j)
 		{
-			(*i1)(j, i) = sqrt(img.height * img.width) * sqrt(dft.first(j, i) * dft.first(j, i) + dft.second(j, i) * dft.second(j, i));
+			(*i1)(j, i) = utils::clamp(sqrt(dft.first(j, i) * dft.first(j, i) + dft.second(j, i) * dft.second(j, i)) / sqrt(dft.first.width() * dft.first.height()));
 			(*i2)(j, i) = utils::clamp(90 * atan2f(dft.second(j, i), dft.first(j, i)));
 		}
 	}
@@ -194,8 +192,8 @@ int main()
 	utils::logTransformation(i1, 1, 255);
 	utils::logTransformation(i2, 1, 255);
 
-	BMP(*i1).saveAs("im1");
-	BMP(*i2).saveAs("im2");
+	BMP(*i1).saveAs("im3");
+	BMP(*i2).saveAs("im4");
 
 	auto a = IDFT2D(dft);
 	Matrix<BYTE>* inverse = new Matrix<BYTE>(img.width, img.height);
@@ -292,8 +290,7 @@ int main()
 	return 0;*/
 
 	
-	// totation test
-
+	// rotation test
 	/*BMP im("1234");
 	
 	matf* m = new matf(im.width, im.height);

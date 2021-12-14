@@ -7,7 +7,7 @@
 
 namespace utils
 {
-	
+	using namespace BMP_lib;
 
 	// return value in range [0; 255]
 	inline BYTE clamp(int color)

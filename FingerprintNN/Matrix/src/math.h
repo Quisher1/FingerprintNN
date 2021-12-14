@@ -53,8 +53,8 @@ static std::pair<matf, matf> DFT1D(const matf& data) {
 				Resum += pow(-1, n) * data(n, i) * std::cosf(-(2 * PI * j * n) / N);
 				Imsum += pow(-1, n) * data(n, i) * std::sinf(-(2 * PI * j * n) / N);
 			}
-			Real_Imaginary.first(j, i) = Resum / N;
-			Real_Imaginary.second(j, i) = Imsum / N;
+			Real_Imaginary.first(j, i) = Resum;// / N;
+			Real_Imaginary.second(j, i) = Imsum;// / N;
 		}
 	}
 	return Real_Imaginary;
@@ -82,8 +82,8 @@ static std::pair<matf, matf> DFT2D(const matf& data) {
 				Resum += pow(-1, m) * (Real_Imaginary_1D.first(j, m) * std::cosf((2 * PI * i * m) / M) - Real_Imaginary_1D.second(j, m) * std::sinf(-(2 * PI * i * m) / M));
 				Imsum += pow(-1, m) * (Real_Imaginary_1D.first(j, m) * std::sinf(-(2 * PI * i * m) / M) + Real_Imaginary_1D.second(j, m) * std::cosf((2 * PI * i * m) / M));
 			}
-			Real_Imaginary_2D.first(j, i) = Resum / M;
-			Real_Imaginary_2D.second(j, i) = Imsum / M;
+			Real_Imaginary_2D.first(j, i) = Resum;// / M;
+			Real_Imaginary_2D.second(j, i) = Imsum;// / M;
 		}
 	}
 	return Real_Imaginary_2D;
@@ -107,7 +107,7 @@ static matf IDFT1D(const std::pair<matf, matf>& data) {
 				Resum += data.first(n, i) * cosf(2 * PI * j * n / N) - data.second(n, i) * sinf(2 * PI * j * n / N);
 				Imsum += data.first(n, i) * sinf(2 * PI * j * n / N) + data.second(n, i) * cosf(2 * PI * j * n / N);
 			}
-			result(j, i) = pow(-1, j) * (Resum + Imsum);
+			result(j, i) = pow(-1, j) * (Resum + Imsum) / N;
 		}
 	}
 	return result;
@@ -151,7 +151,7 @@ static matf IDFT2D(const std::pair<matf, matf>& data) {
 				Resum += inverse_Real_Imaginary_1D.first(j, m) * cosf(2 * PI * i * m / M) - inverse_Real_Imaginary_1D.second(j, m) * sinf(2 * PI * i * m / M);
 				Imsum += inverse_Real_Imaginary_1D.first(j, m) * sinf(2 * PI * i * m / M) + inverse_Real_Imaginary_1D.second(j, m) * cosf(2 * PI * i * m / M);
 			}
-			result(j, i) = pow(-1, j + i) * (Resum + Imsum);
+			result(j, i) = pow(-1, j + i) * (Resum + Imsum) / (N*M);
 		}
 	}
 	return result;
